@@ -4,6 +4,8 @@ from fastapi.responses import RedirectResponse
 from dotenv import load_dotenv
 
 import os
+import json
+import requests
 
 app = FastAPI()
 
@@ -21,5 +23,21 @@ async def main():
 
 @app.get('/oauth/naver/login')
 async def get_token_info(code: str, state: str):
+    res = requests.post('https://nid.naver.com/oauth2.0/token',
+                        data=
+                        {
+                            "grant_type":"authorization_code",
+                            "client_id":CLIENT_ID,
+                            "client_secret":CLIENT_SECRET,
+                            "code":code,
+                            "state":state
+                        }).content.decode()
+
+    res = json.loads(res)
+
+    os.environ["ACCESS_TOKEN"] = res["access_token"]
+    os.environ["REFRESH_TOKEN"] = res["refresh_token"]
+    os.environ["TOKEN_TYPE"] = res["token_type"]
+    os.environ["EXPIRES_IN"] = str(res["expires_in"])
 
     return {"message": "Success"}
